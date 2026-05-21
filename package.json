@@ -1,0 +1,29 @@
+{
+  "name": "aha-english-backend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node scripts/prestart-migrate.js && node src/index.js",
+    "start:prod": "node scripts/prestart-migrate.js && node src/index.js",
+    "dev": "node --watch src/index.js",
+    "build": "npx prisma generate",
+    "render:build": "npm install && npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  }
+}

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aha-english
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: npm run render:build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: JWT_SECRET
+        generateValue: true
+      - fromGroup: aha-english-secrets
+
+databases:
+  - name: aha-english-db
+    plan: free

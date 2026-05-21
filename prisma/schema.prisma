@@ -1,0 +1,198 @@
+// Prisma schema for Aha English (开窍英语)
+// Based on PRD v0.4 data model
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── 用户 ──
+model User {
+  id             String   @id @default(uuid())
+  email          String?  @unique
+  appleUserId    String?  @unique @map("apple_user_id")
+  googleUserId   String?  @unique @map("google_user_id")
+  passwordHash   String?  @map("password_hash")
+  petName        String?  @map("pet_name")
+  petStage       String   @default("egg") @map("pet_stage") // egg, baby, companion, advanced, mature
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  learningProfile LearningProfile?
+  entries          VocabEntry[]
+  reviews          ReviewRecord[]
+  bookImports      BookImport[]
+  annotations      ReadingAnnotation[]
+  sessions         Session[]
+
+  @@map("users")
+}
+
+// ── 学习配置 ──
+model LearningProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+  listeningScore  Int      @default(5) @map("listening_score")
+  speakingScore   Int      @default(5) @map("speaking_score")
+  readingScore    Int      @default(5) @map("reading_score")
+  writingScore    Int      @default(5) @map("writing_score")
+  dailyMinutes    Int      @default(10) @map("daily_minutes")
+  primaryGoal     String   @default("read") @map("primary_goal") // listen, speak, read, write
+  goalWeights     Json     @default("{}") @map("goal_weights")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("learning_profiles")
+}
+
+// ── Session ──
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@map("sessions")
+}
+
+// ── 词条 ──
+model VocabEntry {
+  id              String   @id @default(uuid())
+  userId          String?  @map("user_id")
+  user            User?    @relation(fields: [userId], references: [id])
+  lemma           String                            // 词条原形
+  wordForm        String?  @map("word_form")        // 具体词形
+  pos             String?                           // 词性 (noun, verb, adj...)
+  chineseMeaning  String?  @map("chinese_meaning")  // 中文释义
+  register        String?                           // 语域层级
+  mode            String?                           // spoken / written / both
+  frequencyTier   String?  @map("frequency_tier")   // high / medium / low
+  difficultyTier  String?  @map("difficulty_tier")  // easy / medium / hard
+  exampleSentence String?  @map("example_sentence") // 例句
+  audioUrl        String?  @map("audio_url")
+  sourceBookId    String?  @map("source_book_id")
+  tags            Json     @default("[]")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  cards   Card[]
+  reviews ReviewRecord[]
+
+  @@index([userId])
+  @@index([lemma])
+  @@map("vocab_entries")
+}
+
+// ── 卡片 ──
+model Card {
+  id        String @id @default(uuid())
+  entryId   String @map("entry_id")
+  entry     VocabEntry @relation(fields: [entryId], references: [id])
+  cardType  String @map("card_type") // en2cn, cn2en, spelling, listening, sentence, contrast
+  frontText String @map("front_text")
+  backText  String @map("back_text")
+  hint      String?
+  tags      Json   @default("[]")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  reviews ReviewRecord[]
+
+  @@index([entryId])
+  @@map("cards")
+}
+
+// ── 复习记录 ──
+model ReviewRecord {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  cardId       String   @map("card_id")
+  card         Card     @relation(fields: [cardId], references: [id])
+  entryId      String   @map("entry_id")
+  entry        VocabEntry @relation(fields: [entryId], references: [id])
+  userAnswer   String?  @map("user_answer")
+  isCorrect    Boolean? @map("is_correct")
+  feedback     String?  // again, hard, good, easy
+  responseTimeMs Int?   @map("response_time_ms")
+  reviewMode   String?  @map("review_mode")
+  nextReviewAt DateTime? @map("next_review_at")
+  reviewedAt   DateTime @default(now()) @map("reviewed_at")
+
+  @@index([userId, reviewedAt])
+  @@index([entryId])
+  @@map("review_records")
+}
+
+// ── 书籍 ──
+model BookImport {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  title        String
+  author       String?
+  sourceType   String?  @map("source_type")
+  sourceUrl    String?  @map("source_url")
+  aiLevelScore  Int?    @map("ai_level_score")
+  language     String   @default("en")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  annotations  ReadingAnnotation[]
+  tags         BookTag[]
+
+  @@index([userId])
+  @@map("book_imports")
+}
+
+// ── 标签 ──
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  tagType   String   @map("tag_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  bookTags BookTag[]
+
+  @@map("tags")
+}
+
+// ── 书籍-标签关联 ──
+model BookTag {
+  id     String @id @default(uuid())
+  bookId String @map("book_id")
+  book   BookImport @relation(fields: [bookId], references: [id])
+  tagId  String @map("tag_id")
+  tag    Tag @relation(fields: [tagId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([bookId, tagId])
+  @@map("book_tags")
+}
+
+// ── 阅读标注（划词） ──
+model ReadingAnnotation {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+  bookId          String   @map("book_id")
+  book            BookImport @relation(fields: [bookId], references: [id])
+  chapterRef      String?  @map("chapter_ref")
+  selectedText    String   @map("selected_text")
+  normalizedText  String?  @map("normalized_text")
+  contextText     String?  @map("context_text")
+  meaningSnapshot String?  @map("meaning_snapshot")
+  isSavedToVocab  Boolean  @default(false) @map("is_saved_to_vocab")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([userId, bookId])
+  @@map("reading_annotations")
+}
