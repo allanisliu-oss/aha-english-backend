@@ -211,3 +211,16 @@ model ReadingAnnotation {
   @@index([userId, bookId])
   @@map("reading_annotations")
 }
+
+// ── 词典（ECDICT） ──
+model DictWord {
+  word        String  @id
+  phonetic    String?
+  definition  String? // 英文释义
+  translation String? // 中文释义
+  pos         String? // 词性
+  exchange    String? // 词形变化 (e.g. "went/gone/goes/going")
+  frq         Int?    // COCA 词频
+
+  @@map("dict_words")
+}
