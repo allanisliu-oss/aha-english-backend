@@ -148,9 +148,24 @@ model BookImport {
 
   annotations  ReadingAnnotation[]
   tags         BookTag[]
+  chapters     BookChapter[]
 
   @@index([userId])
   @@map("book_imports")
+}
+
+// ── 书籍章节 ──
+model BookChapter {
+  id           String     @id @default(uuid())
+  bookId       String     @map("book_id")
+  book         BookImport @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapterIndex Int        @map("chapter_index")
+  title        String?
+  content      String
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@index([bookId, chapterIndex])
+  @@map("book_chapters")
 }
 
 // ── 标签 ──
