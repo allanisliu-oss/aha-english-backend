@@ -30,7 +30,6 @@ app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/entries', require('./routes/entries'));
 app.use('/api/v1/learning', require('./routes/learning'));
 app.use('/api/v1/books', require('./routes/books'));
-app.use('/api/v1/dict', require('./routes/dict'));
 
 // TODO: AI routes when Anthropic API key is configured
 // app.use('/api/v1/ai', require('./routes/ai'));
