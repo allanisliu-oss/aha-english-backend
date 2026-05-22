@@ -18,7 +18,7 @@ function signToken(userId) {
 // ── Email 注册 ──
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, petName } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ ok: false, error: 'email_and_password_required' });
@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await prisma.user.create({
-      data: { email, passwordHash },
+      data: { email, passwordHash, ...(petName ? { petName, petStage: 'baby' } : {}) },
     });
 
     // 同时创建学习配置

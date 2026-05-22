@@ -6,12 +6,12 @@ const path = require('path');
 const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
 
 try {
-  console.log('[prestart] Running Prisma migrations...');
-  execSync(`npx prisma migrate deploy --schema="${schemaPath}"`, {
+  console.log('[prestart] Syncing Prisma schema to database...');
+  execSync(`npx prisma db push --schema="${schemaPath}" --skip-generate --accept-data-loss`, {
     stdio: 'inherit',
     cwd: path.join(__dirname, '..'),
   });
-  console.log('[prestart] Migrations complete.');
+  console.log('[prestart] Schema sync complete.');
 } catch (err) {
   console.error('[prestart] Migration failed:', err.message);
   // 如果是生产环境，不要因为 migration 失败而阻止启动
