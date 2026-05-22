@@ -1,0 +1,28 @@
+# Fly.io 应用配置
+# 部署命令：fly deploy
+# 修改后用 fly config validate 校验
+
+app = "aha-english"
+primary_region = "lax"  # 美西，离用户近；想换 sin/hkg 也行
+
+[build]
+  # 用根目录下的 Dockerfile
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"   # 闲置时停（省额度），有请求自动起
+  auto_start_machines = true
+  min_machines_running = 0      # 0 = 真闲置就关机（更省）；改 1 = 永不冷启
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "get"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"   # 免费档；以后 OOM 可以升 512mb
