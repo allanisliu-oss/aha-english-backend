@@ -113,6 +113,45 @@ router.delete('/:bookId', required, async (req, res) => {
   }
 });
 
+// ── 阅读进度：读取 ──
+router.get('/:bookId/progress', required, async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const progress = await prisma.readingProgress.findUnique({
+      where: { userId_bookId: { userId: req.userId, bookId } },
+    });
+    res.json({
+      ok: true,
+      data: progress || { chapterIndex: 0, charOffset: 0 },
+    });
+  } catch (err) {
+    console.error('[books/progress/get]', err);
+    res.status(500).json({ ok: false, error: 'internal_error' });
+  }
+});
+
+// ── 阅读进度：更新 ──
+router.patch('/:bookId/progress', required, async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const { chapterIndex, charOffset } = req.body;
+
+    if (typeof chapterIndex !== 'number' || typeof charOffset !== 'number') {
+      return res.status(400).json({ ok: false, error: 'chapterIndex_and_charOffset_required' });
+    }
+
+    const progress = await prisma.readingProgress.upsert({
+      where: { userId_bookId: { userId: req.userId, bookId } },
+      create: { userId: req.userId, bookId, chapterIndex, charOffset },
+      update: { chapterIndex, charOffset },
+    });
+    res.json({ ok: true, data: progress });
+  } catch (err) {
+    console.error('[books/progress/patch]', err);
+    res.status(500).json({ ok: false, error: 'internal_error' });
+  }
+});
+
 // ── 保存划词标注 ──
 router.post('/:bookId/annotations', required, async (req, res) => {
   try {

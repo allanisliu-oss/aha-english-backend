@@ -28,6 +28,7 @@ model User {
   bookImports      BookImport[]
   annotations      ReadingAnnotation[]
   sessions         Session[]
+  readingProgress  ReadingProgress[]
 
   @@map("users")
 }
@@ -149,9 +150,25 @@ model BookImport {
   annotations  ReadingAnnotation[]
   tags         BookTag[]
   chapters     BookChapter[]
+  progress     ReadingProgress[]
 
   @@index([userId])
   @@map("book_imports")
+}
+
+// ── 阅读进度 ──
+model ReadingProgress {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  bookId        String   @map("book_id")
+  book          BookImport @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapterIndex  Int      @default(0) @map("chapter_index")
+  charOffset    Int      @default(0) @map("char_offset")  // 当前页首字符在章节中的偏移
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, bookId])
+  @@map("reading_progress")
 }
 
 // ── 书籍章节 ──
