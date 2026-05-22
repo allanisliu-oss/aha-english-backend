@@ -135,22 +135,23 @@ model ReviewRecord {
 
 // ── 书籍 ──
 model BookImport {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
-  user         User     @relation(fields: [userId], references: [id])
-  title        String
-  author       String?
-  sourceType   String?  @map("source_type")
-  sourceUrl    String?  @map("source_url")
-  aiLevelScore  Int?    @map("ai_level_score")
-  language     String   @default("en")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  title         String
+  author        String?
+  sourceType    String?  @map("source_type")
+  sourceUrl     String?  @map("source_url")
+  aiLevelScore  Int?     @map("ai_level_score")
+  language      String   @default("en")
+  // 章节标题数组（["Chapter 1", "Chapter 2", ...]），正文存设备
+  chapterTitles Json     @default("[]") @map("chapter_titles")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  annotations  ReadingAnnotation[]
-  tags         BookTag[]
-  chapters     BookChapter[]
-  progress     ReadingProgress[]
+  annotations   ReadingAnnotation[]
+  tags          BookTag[]
+  progress      ReadingProgress[]
 
   @@index([userId])
   @@map("book_imports")
@@ -164,25 +165,11 @@ model ReadingProgress {
   bookId        String   @map("book_id")
   book          BookImport @relation(fields: [bookId], references: [id], onDelete: Cascade)
   chapterIndex  Int      @default(0) @map("chapter_index")
-  charOffset    Int      @default(0) @map("char_offset")  // 当前页首字符在章节中的偏移
+  charOffset    Int      @default(0) @map("char_offset")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@unique([userId, bookId])
   @@map("reading_progress")
-}
-
-// ── 书籍章节 ──
-model BookChapter {
-  id           String     @id @default(uuid())
-  bookId       String     @map("book_id")
-  book         BookImport @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  chapterIndex Int        @map("chapter_index")
-  title        String?
-  content      String
-  createdAt    DateTime   @default(now()) @map("created_at")
-
-  @@index([bookId, chapterIndex])
-  @@map("book_chapters")
 }
 
 // ── 标签 ──
